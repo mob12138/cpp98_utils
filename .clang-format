@@ -1,0 +1,21 @@
+# 语言: None, Cpp, Java, JavaScript
+Language: Cpp
+BasedOnStyle: Microsoft
+
+# 访问说明符(public、private等)的偏移
+AccessModifierOffset: -4
+
+# 缩进宽度
+IndentWidth: 4
+
+# 指针和引用的对齐: Left, Right, Middle
+PointerAlignment: Left
+
+# 允许排序#include
+SortIncludes: false
+
+# 总是在template声明后换行
+AlwaysBreakTemplateDeclarations: true
+
+AllowShortFunctionsOnASingleLine: All
+AllowShortIfStatementsOnASingleLine: true
