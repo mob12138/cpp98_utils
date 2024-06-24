@@ -8,3 +8,6 @@ build/
 # Clangd cache
 .clangd/
 .cache/
+
+# VSCode cache
+.vscode/

@@ -1,9 +1,9 @@
-#include <boost/bind.hpp>
-#include <boost/shared_ptr.hpp>
 #include <iostream>
 #include <list>
 
-#include "boost/smart_ptr/shared_ptr.hpp"
+#include <boost/bind.hpp>
+#include <boost/shared_ptr.hpp>
+
 #include "thread/thread.h"
 #include "thread/thread_pool.h"
 #include "utils/calc_runtime.h"
