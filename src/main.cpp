@@ -8,10 +8,7 @@
 #include "thread/thread_pool.h"
 #include "utils/calc_runtime.h"
 
-void test1(atomic<LONG>& a)
-{
-    ++a;
-}
+void test1(atomic<LONG>& a) { ++a; }
 
 void submit_task(thread_pool* pool, atomic<LONG>& a)
 {
@@ -30,7 +27,7 @@ int main()
     typedef std::list<thread_ptr> threads;
 
     calc_runtime ct;
-    thread_pool pool(1, 0);
+    thread_pool pool(4, 0);
     atomic<LONG> count = 0;
     threads listThreads;
     for (int i = 0; i < 3; ++i)
@@ -41,7 +38,7 @@ int main()
     {
         (*it)->join();
     }
-
+    listThreads.clear();
     pool.wait();
     ct.end();
     std::cout << "run time: " << ct.run_time_in_second() << " s" << std::endl;

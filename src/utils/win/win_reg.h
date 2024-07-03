@@ -9,6 +9,8 @@
 
 #include "../string_defs.h"
 #include <windows.h>
+#include <vector>
+#pragma comment(lib, "Advapi32.lib")
 
 #define HKCR (HKEY_CLASSES_ROOT)
 #define HKCU (HKEY_CURRENT_USER)
@@ -43,20 +45,14 @@ public:
     {
         open_key(v_hRootKey, v_pszSubKeyPath, v_samDesired);
     }
-    virtual ~win_reg()
-    {
-        close_cur_key();
-    }
+    virtual ~win_reg() { close_cur_key(); }
 
 public:
     /**
      * @brief 获取最后一次操作的错误代码
      * @return LSTATUS 错误代码
      */
-    static LSTATUS get_last_error()
-    {
-        return m_lLastError;
-    }
+    static LSTATUS get_last_error() { return m_lLastError; }
 
 public:
     /**
@@ -201,10 +197,7 @@ private:
      * @brief 判断操作是否成功
      * @return BOOL TRUE成功，FALSE失败
      */
-    BOOL is_successed() const
-    {
-        return ERROR_SUCCESS == m_lLastError;
-    }
+    BOOL is_successed() const { return ERROR_SUCCESS == m_lLastError; }
 
 private:
     HKEY m_hCurKey;              // 当前打开的注册表节点

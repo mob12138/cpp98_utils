@@ -1,4 +1,4 @@
-#ifndef STRING_DEF_H
+﻿#ifndef STRING_DEF_H
 #define STRING_DEF_H
 
 #include <string>
@@ -7,10 +7,9 @@
 #include <sstream>
 #include <tchar.h>
 
-#if _UNICODE
+#if UNICODE
 typedef wchar_t char_t;
 typedef std::wstring string_t;
-#define _XPLATSTR(x) L##x
 typedef std::wostringstream ostringstream_t;
 typedef std::wofstream ofstream_t;
 typedef std::wostream ostream_t;
@@ -25,7 +24,6 @@ typedef std::wstringstream stringstream_t;
 #else
 typedef char char_t;
 typedef std::string string_t;
-#define _XPLATSTR(x) x
 typedef std::ostringstream ostringstream_t;
 typedef std::ofstream ofstream_t;
 typedef std::ostream ostream_t;
@@ -38,7 +36,6 @@ typedef std::stringstream stringstream_t;
 #define cerr_t std::cerr
 #endif
 
-#define _t(x) _XPLATSTR(x)
 using std::endl;
 
 #endif // STRING_DEF_H

@@ -1,4 +1,4 @@
-#ifndef CALU_RUNTIME_H
+﻿#ifndef CALU_RUNTIME_H
 #define CALU_RUNTIME_H
 
 #include <ctime>

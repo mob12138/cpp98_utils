@@ -93,22 +93,29 @@ public:
 
     /**
      * @brief 将队列头部消息弹出
-     * @note 若队列为空，则等待直到队列不为空；超时时间是超时后再次尝试弹出，而不是直接返回
+     * @note 若队列为空，则等待直到队列不为空；
      * @param [out] v_tMsg 弹出的消息内容
-     * @param [in] v_dwTimeout 条件变量等待超时时间，INFINITE表示无限等待
      */
-    void pop(T& v_tMsg, DWORD v_dwTimeout = 100)
+    void pop(T& v_tMsg)
     {
         unique_lock_ lockGet(m_mutexGet);
         if (m_dequeGet.empty())
         {
             unique_lock_ lockPut(m_mutexPut);
+
+            unsigned int nTimeOuts = 0;
             while (all_deque_empty())
             {
+                // 避免死锁，设置超时时间
+                if (nTimeOuts < 1000)
+                {
+                    nTimeOuts += 50;
+                }
+
                 m_cvPut.notify_all();
 
                 lockPut.unlock();
-                m_cvGet.wait_for(lockGet, v_dwTimeout);
+                m_cvGet.wait_for(lockGet, nTimeOuts);
                 lockPut.lock();
             }
 

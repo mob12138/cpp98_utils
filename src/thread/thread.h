@@ -2,16 +2,22 @@
  * @file thread_win.h
  * @brief C++98 windows线程封装类，添加function新特性支持
  * @author zhengw
- * @date 2024-05-30
+ * @date 2024-07-03
  */
 
 #ifndef THREAD_WIN_H
 #define THREAD_WIN_H
 
+#include <minwindef.h>
 #include <process.h>
 #include <windows.h>
 
 #include <boost/function.hpp>
+
+namespace this_thread
+{
+inline DWORD get_id() { return ::GetCurrentThreadId(); }
+} // namespace this_thread
 
 class thread
 {
@@ -41,10 +47,9 @@ public:
 
         m_hThread = (HANDLE)::_beginthreadex(NULL, 0, run, this, CREATE_SUSPENDED, &m_uiThreadId);
 
-        set_priority(m_iPriority);
-
         return valid();
     }
+
     /**
      * @brief 启动线程
      */
@@ -56,10 +61,12 @@ public:
             m_bRunning = TRUE;
         }
     }
+
     /**
      * @brief 等待线程结束
      */
     void join() { join_for(INFINITE); }
+
     /**
      * @brief 等待线程结束，超时直接终止线程
      * @param [in] v_dwTimeout 超时时间，单位毫秒
@@ -75,10 +82,11 @@ public:
         }
         detach();
     }
+
     /**
      * @brief 暂停线程
      */
-    void suspend()
+    void interrupt()
     {
         if (joinable())
         {
@@ -86,16 +94,18 @@ public:
             m_bRunning = FALSE;
         }
     }
+
     /**
      * @brief 睡眠线程
      * @param [in] v_dwMilliseconds 睡眠时间，单位毫秒
      */
     void sleep_for(DWORD v_dwMilliseconds)
     {
-        suspend();
+        interrupt();
         ::Sleep(v_dwMilliseconds);
         start();
     }
+
     /**
      * @brief 分离线程
      */
@@ -109,6 +119,7 @@ public:
             m_bRunning = FALSE;
         }
     }
+
     /**
      * @brief 终止线程
      */
@@ -121,6 +132,7 @@ public:
             detach();
         }
     }
+
     /**
      * @brief 设置线程优先级
      * @param [in] v_iPriority 优先级
@@ -139,6 +151,13 @@ public:
     BOOL running() const { return m_bRunning; }
     UINT32 id() const { return m_uiThreadId; }
     int priority() const { return m_iPriority; }
+
+    static DWORD hardware_concurrency()
+    {
+        SYSTEM_INFO sys_info;
+        ::GetSystemInfo(&sys_info);
+        return sys_info.dwNumberOfProcessors;
+    }
 
 private:
     /**
