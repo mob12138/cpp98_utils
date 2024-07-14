@@ -5,7 +5,6 @@
 #include <BaseTsd.h>
 #include <boost/shared_ptr.hpp>
 #include "sqlite3.h"
-#pragma comment(lib, "sqlite3.lib")
 
 class db_sqlite3_query_result;
 class db_sqlite3_stmt_binder;
@@ -13,6 +12,7 @@ class db_sqlite3_stmt_binder;
 class db_sqlite3
 {
     friend class db_sqlite3_stmt_binder;
+
 public:
     db_sqlite3() : m_pDb(NULL) {}
     virtual ~db_sqlite3() { disconnect(); }
@@ -61,8 +61,9 @@ class db_sqlite3_query_result
 public:
     db_sqlite3_query_result(sqlite3* v_pDb, sqlite3_stmt* v_pStmt);
     virtual ~db_sqlite3_query_result() {}
+
 public:
-    bool next_row() const;
+    bool next() const;
     int get_column_count() const;
     int get_column_type(int v_nCol) const;
     const char* get_column_name(int v_nCol) const;
@@ -85,9 +86,11 @@ private:
 class db_sqlite3_stmt_binder
 {
     friend class db_sqlite3;
+
 public:
     db_sqlite3_stmt_binder(db_sqlite3* v_pDb) : m_pDb(v_pDb), m_pStmt(NULL) {}
     virtual ~db_sqlite3_stmt_binder() {}
+
 public:
     bool prepare(const std::string& v_strSql);
     bool prepare(const char* v_pszSql, ...);
@@ -95,7 +98,7 @@ public:
     bool prepare(const wchar_t* v_pwszSql, ...);
     bool reset();
 
-    int bind(int v_nCol, const void* v_pVal, int v_nLen, void(*v_xDel)(void*));
+    int bind(int v_nCol, const void* v_pVal, int v_nLen, void (*v_xDel)(void*));
     int bind(int v_nCol, int v_val);
     int bind(int v_nCol, double v_val);
     int bind(int v_nCol, const std::string& v_val);

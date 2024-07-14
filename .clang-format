@@ -19,3 +19,4 @@ AlwaysBreakTemplateDeclarations: true
 
 AllowShortFunctionsOnASingleLine: All
 AllowShortIfStatementsOnASingleLine: true
+

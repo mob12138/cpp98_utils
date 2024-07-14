@@ -1,6 +1,9 @@
 #include "../../string_utils.h"
 #include <iostream>
+#include <boost/make_shared.hpp>
 #include "db_sqlite3.h"
+
+#pragma comment(lib, "sqlite3.lib")
 
 bool db_sqlite3::m_bHasError = false;
 std::string db_sqlite3::m_strLastError;
@@ -228,7 +231,7 @@ void db_sqlite3::reset_error()
 db_sqlite3_query_result::db_sqlite3_query_result(sqlite3* v_pDb, sqlite3_stmt* v_pStmt)
     : m_pDb(v_pDb), m_pStmt(v_pStmt)
 {}
-bool db_sqlite3_query_result::next_row() const
+bool db_sqlite3_query_result::next() const
 {
     db_sqlite3::reset_error();
     int nRet = sqlite3_step(m_pStmt);
