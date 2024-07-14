@@ -43,52 +43,81 @@ private:
 class shared_mutex
 {
 public:
-    shared_mutex() : m_nReaders(0), m_bWriting(FALSE) {}
+    shared_mutex() : m_bWriteEntered(false), m_nReaders(0) {}
 
 public:
-    void lock_shared()
-    {
-        unique_lock<mutex> lock(m_mutex);
-        while (m_bWriting)
-        {
-            m_cvReaders.wait(lock);
-        }
-
-        ++m_nReaders;
-    }
-    void unlock_shared()
-    {
-        unique_lock<mutex> lock(m_mutex);
-        if (--m_nReaders == 0 && m_bWriting)
-        {
-            m_cvWriters.notify_one();
-        }
-    }
-
     void lock()
     {
         unique_lock<mutex> lock(m_mutex);
-        while (m_nReaders > 0 || m_bWriting)
+        while (m_bWriteEntered)
         {
-            m_cvWriters.wait(lock);
+            m_cvGate1.wait(lock);
         }
 
-        m_bWriting = TRUE;
+        m_bWriteEntered = true;
+
+        while (m_nReaders > 0)
+        {
+            m_cvGate2.wait(lock);
+        }
     }
+
     void unlock()
     {
         unique_lock<mutex> lock(m_mutex);
-        m_bWriting = FALSE;
-        m_cvReaders.notify_all();
-        m_cvWriters.notify_one();
+        m_bWriteEntered = false;
+        m_cvGate1.notify_all();
+    }
+
+    bool try_lock()
+    {
+        unique_lock<mutex> lock(m_mutex);
+        if (m_bWriteEntered || m_nReaders > 0)
+        {
+            return false;
+        }
+        m_bWriteEntered = true;
+        return true;
+    }
+
+    void lock_shared()
+    {
+        unique_lock<mutex> lock(m_mutex);
+        while (m_bWriteEntered)
+        {
+            m_cvGate1.wait(lock);
+        }
+        ++m_nReaders;
+    }
+
+    void unlock_shared()
+    {
+        unique_lock<mutex> lock(m_mutex);
+        --m_nReaders;
+
+        if (0 == m_nReaders && m_bWriteEntered)
+        {
+            m_cvGate2.notify_one();
+        }
+    }
+
+    bool try_lock_shared()
+    {
+        unique_lock<mutex> lock(m_mutex);
+        if (!m_bWriteEntered)
+        {
+            ++m_nReaders;
+            return true;
+        }
+        return false;
     }
 
 private:
-    mutex m_mutex;                  // 互斥量
-    condition_variable m_cvReaders; // 读者条件变量
-    condition_variable m_cvWriters; // 写者条件变量
-    UINT m_nReaders;                // 读者数量
-    BOOL m_bWriting;                // 写者标志
+    mutex m_mutex;
+    condition_variable m_cvGate1;
+    condition_variable m_cvGate2;
+    bool m_bWriteEntered;
+    unsigned int m_nReaders;
 };
 
 #endif // SHARED_MUTEX_H

@@ -48,14 +48,9 @@ public:
      * @brief 构造函数，从句柄构造
      * @param [in] v_hEvent 事件句柄
      */
-    win_event(HANDLE v_hEvent) : m_handle(v_hEvent)
-    {
-    }
+    win_event(HANDLE v_hEvent) : m_handle(v_hEvent) {}
 
-    virtual ~win_event()
-    {
-        close();
-    }
+    virtual ~win_event() { disconnect(); }
 
 public:
     /**
@@ -71,49 +66,34 @@ public:
     /**
      * @brief 等待事件,无限等待
      */
-    void wait() const
-    {
-        wait_for(INFINITE);
-    }
+    void wait() const { wait_for(INFINITE); }
 
     /**
      * @brief 是否已设置事件
      * @return (BOOL) TRUE 已设置，FALSE 未设置
      */
-    BOOL signaled() const
-    {
-        return wait_for(0);
-    }
+    BOOL signaled() const { return wait_for(0); }
 
     /**
      * @brief 设置事件
      */
-    void set() const
-    {
-        ::SetEvent(m_handle);
-    }
+    void set() const { ::SetEvent(m_handle); }
 
     /**
      * @brief 重置事件
      */
-    void reset() const
-    {
-        ::ResetEvent(m_handle);
-    }
+    void reset() const { ::ResetEvent(m_handle); }
 
     /**
      * @brief 句柄是否有效
      * @return (BOOL) TRUE 有效，FALSE 无效
      */
-    BOOL valid() const
-    {
-        return m_handle && m_handle != INVALID_HANDLE_VALUE;
-    }
+    BOOL valid() const { return m_handle && m_handle != INVALID_HANDLE_VALUE; }
 
     /**
      * @brief 关闭事件
      */
-    void close() const
+    void disconnect() const
     {
         if (valid())
         {
@@ -122,10 +102,7 @@ public:
     }
 
 public:
-    HANDLE handle() const
-    {
-        return m_handle;
-    }
+    HANDLE handle() const { return m_handle; }
 
 private:
     HANDLE m_handle;
@@ -139,12 +116,8 @@ class win_events
     typedef std::vector<HANDLE> handles;
 
 public:
-    win_events()
-    {
-    }
-    virtual ~win_events()
-    {
-    }
+    win_events() {}
+    virtual ~win_events() {}
 
 public:
     /**
@@ -152,10 +125,7 @@ public:
      * @note 非线程安全
      * @param [in] v_event 事件
      */
-    void add(win_event& v_event)
-    {
-        m_events.push_back(v_event.handle());
-    }
+    void add(win_event& v_event) { m_events.push_back(v_event.handle()); }
     /**
      * @brief 移除事件
      * @note 非线程安全
@@ -195,10 +165,7 @@ public:
      * @param [in] v_dwResult wait_for的返回值
      * @return (BOOL) TRUE 事件被设置，FALSE 超时或失败
      */
-    static BOOL is_wait_for_seted(DWORD v_dwResult)
-    {
-        return v_dwResult != WAIT_TIMEOUT && v_dwResult != WAIT_FAILED;
-    }
+    static BOOL is_wait_for_seted(DWORD v_dwResult) { return v_dwResult != WAIT_TIMEOUT && v_dwResult != WAIT_FAILED; }
 
     /**
      * @brief 通过wait_for返回的事件索引获取事件句柄

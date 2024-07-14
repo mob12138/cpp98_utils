@@ -9,7 +9,6 @@
 #define MUTEX_H
 
 #include <windows.h>
-#include <string>
 
 /**
  * @brief 局部锁的模板实现
@@ -61,34 +60,6 @@ public:
 
 private:
     CRITICAL_SECTION m_crit; // 临界区
-};
-
-/**
- * @brief 信号量
- */
-class semaphore
-{
-public:
-    semaphore(LONG v_lMaximumCount, LONG v_lInitialCount = 0, wchar_t* v_szName = NULL) : m_strName(v_szName)
-    {
-        m_handle = ::CreateSemaphoreW(NULL, v_lInitialCount, v_lMaximumCount, v_szName);
-    }
-
-    ~semaphore() { ::CloseHandle(m_handle); }
-
-    BOOL wait_for(DWORD v_dwMilliseconds) { return ::WaitForSingleObject(m_handle, v_dwMilliseconds) == WAIT_OBJECT_0; }
-
-    void wait() { wait_for(INFINITE); }
-
-    BOOL try_wait() { return wait_for(0); }
-
-    void notify() { ::ReleaseSemaphore(m_handle, 1, NULL); }
-
-    std::wstring name() const { return m_strName; }
-
-private:
-    HANDLE m_handle;
-    std::wstring m_strName;
 };
 
 #endif // MUTEX_H

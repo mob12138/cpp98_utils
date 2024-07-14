@@ -4,9 +4,9 @@
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
 
-#include "thread/thread.h"
-#include "thread/thread_pool.h"
-#include "utils/calc_runtime.h"
+#include "../src/thread/thread.h"
+#include "../src/thread/thread_pool.h"
+#include "../src/utils/calc_runtime.h"
 
 void test1(atomic<LONG>& a) { ++a; }
 

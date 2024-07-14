@@ -1,18 +1,26 @@
 add_rules("mode.debug", "mode.release")
 
--- set_languages("c99", "c++98")
-
--- add_defines("_MSC_VER=1938")
 add_defines("BOOST_CLANG")
-add_defines("UNICODE")
-add_defines("_UNICODE")
+add_defines("UNICODE","_UNICODE")
 
 add_includedirs("third")
 
-target("cpp98_utils")
+set_toolchains("llvm")
+
+target("example1")
     set_kind("binary")
+    set_toolchains("llvm")
     add_headerfiles("src/*/*.h")
-    add_files("src/*.cpp", "src/**/*.cpp")
+    add_files("example/1/*.cpp")
+
+
+target("example2")
+    set_kind("binary")
+    set_toolchains("llvm")
+    add_includedirs("src/thread")
+    add_files("src/**/*.cpp")
+    add_files("example/2/*.cpp")
+
 
 --
 -- If you want to known more usage about xmake, please see https://xmake.io

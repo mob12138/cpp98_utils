@@ -68,23 +68,6 @@ wstring format(const wchar_t* v_pwszFmt, ...)
     return wstr;
 }
 
-void to_lower(string& v_str)
-{
-    ::CharLowerBuffA(&v_str[0], (DWORD)v_str.size());
-}
-void to_lower(wstring& v_wstr)
-{
-    ::CharLowerBuffW(&v_wstr[0], (DWORD)v_wstr.size());
-}
-void to_upper(string& v_str)
-{
-    ::CharUpperBuffA(&v_str[0], (DWORD)v_str.size());
-}
-void to_upper(wstring& v_wstr)
-{
-    ::CharUpperBuffW(&v_wstr[0], (DWORD)v_wstr.size());
-}
-
 bool compare_no_case(const string& v_str1, const string& v_str2)
 {
     return ::_stricmp(v_str1.c_str(), v_str2.c_str()) == 0;

@@ -25,14 +25,9 @@ void format(wstring& v_wstr, const wchar_t* v_pwszFmt, ...);
 string format(const char* v_pszFmt, ...);
 wstring format(const wchar_t* v_pwszFmt, ...);
 
-void to_lower(string& v_str);
-void to_lower(wstring& v_wstr);
-void to_upper(string& v_str);
-void to_upper(wstring& v_wstr);
-
 bool compare_no_case(const string& v_str1, const string& v_str2);
 bool compare_no_case(const wstring& v_wstr1, const wstring& v_wstr2);
-
+ 
 wstring a_to_w(const char* v_pszASCII);
 string a_to_utf8(const char* v_pszASCII);
 string w_to_a(const wchar_t* v_pszUnicode);

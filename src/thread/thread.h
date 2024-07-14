@@ -8,7 +8,6 @@
 #ifndef THREAD_WIN_H
 #define THREAD_WIN_H
 
-#include <minwindef.h>
 #include <process.h>
 #include <windows.h>
 

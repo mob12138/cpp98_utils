@@ -8,6 +8,8 @@
 #ifndef ATOMIC_H
 #define ATOMIC_H
 
+#include <windows.h>
+
 /**
  * @brief 原子模板类，采用windows API实现原子操作，线程安全
  * @tparam T 原子操作的数据类型，只能是LONG，不支持LONG64是为了兼容XP系统
