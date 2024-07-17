@@ -2,7 +2,7 @@
 
 LSTATUS win_reg::m_lLastError = ERROR_SUCCESS;
 
-BOOL win_reg::create_key(HKEY v_hRootKey, const char_t* v_pszSubKeyPath, REGSAM v_samDesired)
+BOOL win_reg::create_key(HKEY v_hRootKey, const _tchar* v_pszSubKeyPath, REGSAM v_samDesired)
 {
     if (!v_hRootKey || !v_pszSubKeyPath)
     {
@@ -22,7 +22,7 @@ BOOL win_reg::create_key(HKEY v_hRootKey, const char_t* v_pszSubKeyPath, REGSAM 
     return FALSE;
 }
 
-BOOL win_reg::open_key(HKEY v_hRootKey, const char_t* v_pszSubKeyPath, REGSAM v_samDesired)
+BOOL win_reg::open_key(HKEY v_hRootKey, const _tchar* v_pszSubKeyPath, REGSAM v_samDesired)
 {
     if (!v_hRootKey)
     {
@@ -40,7 +40,7 @@ BOOL win_reg::open_key(HKEY v_hRootKey, const char_t* v_pszSubKeyPath, REGSAM v_
     return FALSE;
 }
 
-BOOL win_reg::delete_key(HKEY v_hRootKey, const char_t* v_pszSubKeyPath)
+BOOL win_reg::delete_key(HKEY v_hRootKey, const _tchar* v_pszSubKeyPath)
 {
     if (!v_hRootKey || !v_pszSubKeyPath)
     {
@@ -51,15 +51,15 @@ BOOL win_reg::delete_key(HKEY v_hRootKey, const char_t* v_pszSubKeyPath)
     return (ERROR_SUCCESS == m_lLastError);
 }
 
-BOOL win_reg::delete_value(const char_t* v_pszValueName)
+BOOL win_reg::delete_value(const _tchar* v_pszValueName)
 {
     m_lLastError = ::RegDeleteKeyValue(m_hCurKey, NULL, v_pszValueName);
     return is_successed();
 }
 
-BOOL win_reg::enum_keys(std::vector<string_t>& v_keyList)
+BOOL win_reg::enum_keys(std::vector<_tstring>& v_keyList)
 {
-    char_t szKeyName[MAX_PATH] = {0};
+    _tchar szKeyName[MAX_PATH] = {0};
     DWORD dwCchName = _countof(szKeyName);
     DWORD dwIndex = 0;
 
@@ -78,9 +78,9 @@ BOOL win_reg::enum_keys(std::vector<string_t>& v_keyList)
     return TRUE;
 }
 
-BOOL win_reg::enum_values(std::vector<string_t>& v_valueList)
+BOOL win_reg::enum_values(std::vector<_tstring>& v_valueList)
 {
-    char_t szValueName[MAX_PATH] = {0};
+    _tchar szValueName[MAX_PATH] = {0};
     DWORD dwCchName = _countof(szValueName);
     DWORD dwIndex = 0;
 
@@ -99,13 +99,13 @@ BOOL win_reg::enum_values(std::vector<string_t>& v_valueList)
     return TRUE;
 }
 
-BOOL win_reg::set_dword(const char_t* v_pszValueName, DWORD v_dwValue)
+BOOL win_reg::set_dword(const _tchar* v_pszValueName, DWORD v_dwValue)
 {
     m_lLastError = ::RegSetValueEx(m_hCurKey, v_pszValueName, 0, REG_DWORD, (const BYTE*)&v_dwValue, sizeof(v_dwValue));
     return is_successed();
 }
 
-BOOL win_reg::get_dword(const char_t* v_pszValueName, DWORD& v_dwValue)
+BOOL win_reg::get_dword(const _tchar* v_pszValueName, DWORD& v_dwValue)
 {
     DWORD v_dwDataSize = sizeof(v_dwValue);
     DWORD dwType = REG_DWORD;
@@ -113,14 +113,14 @@ BOOL win_reg::get_dword(const char_t* v_pszValueName, DWORD& v_dwValue)
     return is_successed();
 }
 
-BOOL win_reg::set_qword(const char_t* v_pszValueName, ULONGLONG v_ullValue)
+BOOL win_reg::set_qword(const _tchar* v_pszValueName, ULONGLONG v_ullValue)
 {
     m_lLastError =
         ::RegSetValueEx(m_hCurKey, v_pszValueName, 0, REG_QWORD, (const BYTE*)&v_ullValue, sizeof(v_ullValue));
     return is_successed();
 }
 
-BOOL win_reg::get_qword(const char_t* v_pszValueName, ULONGLONG& v_ullValue)
+BOOL win_reg::get_qword(const _tchar* v_pszValueName, ULONGLONG& v_ullValue)
 {
     DWORD v_dwDataSize = sizeof(v_ullValue);
     DWORD dwType = REG_QWORD;
@@ -128,14 +128,14 @@ BOOL win_reg::get_qword(const char_t* v_pszValueName, ULONGLONG& v_ullValue)
     return is_successed();
 }
 
-BOOL win_reg::set_string(const char_t* v_pszValueName, const string_t& v_strValue)
+BOOL win_reg::set_string(const _tchar* v_pszValueName, const _tstring& v_strValue)
 {
     m_lLastError = ::RegSetValueEx(m_hCurKey, v_pszValueName, 0, REG_SZ, (const BYTE*)v_strValue.c_str(),
-                                   (DWORD)((v_strValue.length() + 1) * sizeof(char_t)));
+                                   (DWORD)((v_strValue.length() + 1) * sizeof(_tchar)));
     return is_successed();
 }
 
-BOOL win_reg::get_string(const char_t* v_pszValueName, string_t& v_strValue)
+BOOL win_reg::get_string(const _tchar* v_pszValueName, _tstring& v_strValue)
 {
     DWORD v_dwDataSize = 0;
     DWORD dwType = REG_SZ;
@@ -145,18 +145,18 @@ BOOL win_reg::get_string(const char_t* v_pszValueName, string_t& v_strValue)
         return FALSE;
     }
 
-    v_strValue.resize(v_dwDataSize / sizeof(char_t));
+    v_strValue.resize(v_dwDataSize / sizeof(_tchar));
     m_lLastError = ::RegQueryValueEx(m_hCurKey, v_pszValueName, NULL, &dwType, (LPBYTE)&v_strValue[0], &v_dwDataSize);
     return is_successed();
 }
 
-BOOL win_reg::set_binary(const char_t* v_pszValueName, const void* v_pData, DWORD v_dwDataSize)
+BOOL win_reg::set_binary(const _tchar* v_pszValueName, const void* v_pData, DWORD v_dwDataSize)
 {
     m_lLastError = ::RegSetValueEx(m_hCurKey, v_pszValueName, 0, REG_BINARY, (const BYTE*)v_pData, v_dwDataSize);
     return is_successed();
 }
 
-BOOL win_reg::get_binary(const char_t* v_pszValueName, void* v_pData, DWORD v_dwDataSize)
+BOOL win_reg::get_binary(const _tchar* v_pszValueName, void* v_pData, DWORD v_dwDataSize)
 {
     DWORD dwType = REG_BINARY;
     DWORD dwSize = v_dwDataSize;
@@ -164,7 +164,7 @@ BOOL win_reg::get_binary(const char_t* v_pszValueName, void* v_pData, DWORD v_dw
     return is_successed();
 }
 
-BOOL win_reg::get_value_size(const char_t* v_pszValueName, DWORD& v_dwDataSize)
+BOOL win_reg::get_value_size(const _tchar* v_pszValueName, DWORD& v_dwDataSize)
 {
     m_lLastError = ::RegQueryValueEx(m_hCurKey, v_pszValueName, NULL, NULL, NULL, &v_dwDataSize);
     return is_successed() || (ERROR_MORE_DATA == m_lLastError);

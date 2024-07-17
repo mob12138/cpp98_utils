@@ -1,29 +1,38 @@
 #include <iostream>
-#include <list>
 
-#include <boost/bind.hpp>
-#include <boost/shared_ptr.hpp>
+#include "../../src/utils/thread/thread_pool.hpp"
+#include "../../src/utils/calc_runtime.hpp"
 
-#include "../src/thread/thread.h"
-#include "../src/thread/thread_pool.h"
-#include "../src/utils/calc_runtime.h"
-
-void test1(atomic<LONG>& a) { ++a; }
-
-void submit_task(thread_pool* pool, atomic<LONG>& a)
+void task1(void *param)
 {
-    for (int i = 0; i < 3000000; ++i)
+    atomic<LONG> *a = static_cast<atomic<LONG> *>(param);
+    ++(*a);
+}
+struct submit_task_thread : public thread
+{
+    void submit_task(thread_pool *pool, atomic<LONG> &a)
     {
-        if (pool)
+        task_func task;
+        for (int i = 0; i < 3000000; ++i)
         {
-            pool->submit(boost::bind(test1, boost::ref(a)));
+            if (pool)
+            {
+                task.m_func = task1;
+                task.m_param = &a;
+                pool->submit(task);
+            }
         }
     }
-}
+
+    void run() override { submit_task(&pool, a); }
+    submit_task_thread(thread_pool &pool, atomic<LONG> &a) : pool(pool), a(a) {}
+    thread_pool &pool;
+    atomic<LONG> &a;
+};
 
 int main()
 {
-    typedef boost::shared_ptr<thread> thread_ptr;
+    typedef shared_ptr<thread> thread_ptr;
     typedef std::list<thread_ptr> threads;
 
     calc_runtime ct;
@@ -32,13 +41,13 @@ int main()
     threads listThreads;
     for (int i = 0; i < 3; ++i)
     {
-        listThreads.push_back(boost::make_shared<thread>(boost::bind(submit_task, &pool, boost::ref(count))));
+        listThreads.push_back(thread_ptr(new submit_task_thread(pool,count)));
     }
     for (threads::iterator it = listThreads.begin(); it != listThreads.end(); ++it)
     {
         (*it)->join();
     }
-    listThreads.clear();
+
     pool.wait();
     ct.end();
     std::cout << "run time: " << ct.run_time_in_second() << " s" << std::endl;

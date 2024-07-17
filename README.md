@@ -9,4 +9,3 @@
 7. 仿照C++11的std::atomic，封装Windows API实现原子类，保持接口一致。
 8. 封装了一个线程安全的队列。
 9. 封装了一个线程池。
-10. 引入了header-only的boost库，包含了boost::scoped_ptr、boost::shared_ptr、boost::weak_ptr三个智能指针；boost::bind用于绑定函数和函数对象；boost::function用于保存函数指针和函数对象；boost::variant用于保存任意类型的数据；boost::unordered_map、boost::unordered_set用于保存无序的键值对和集合。 

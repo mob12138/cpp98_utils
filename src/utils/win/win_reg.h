@@ -7,7 +7,7 @@
 #ifndef _WIN_REG_H_
 #define _WIN_REG_H_
 
-#include "../string_defs.h"
+#include "../string/string_defs.h"
 #include <windows.h>
 #include <vector>
 #pragma comment(lib, "Advapi32.lib")
@@ -40,7 +40,7 @@ public:
      * @param [in] v_pszSubKeyPath 子节点路径
      * @param [in] v_samDesired 访问权限
      */
-    win_reg(HKEY v_hRootKey = NULL, const char_t* v_pszSubKeyPath = NULL, REGSAM v_samDesired = KEY_READ | KEY_WRITE)
+    win_reg(HKEY v_hRootKey = NULL, const _tchar* v_pszSubKeyPath = NULL, REGSAM v_samDesired = KEY_READ | KEY_WRITE)
         : m_hCurKey(NULL)
     {
         open_key(v_hRootKey, v_pszSubKeyPath, v_samDesired);
@@ -63,7 +63,7 @@ public:
      * @param [in] v_samDesired 访问权限
      * @return BOOL TRUE成功，FALSE失败
      */
-    BOOL create_key(HKEY v_hRootKey, const char_t* v_pszSubKeyPath, REGSAM v_samDesired = KEY_ALL_ACCESS);
+    BOOL create_key(HKEY v_hRootKey, const _tchar* v_pszSubKeyPath, REGSAM v_samDesired = KEY_ALL_ACCESS);
 
     /**
      * @brief 打开注册表节点
@@ -73,7 +73,7 @@ public:
      * @param [in] v_samDesired 访问权限
      * @return BOOL TRUE成功，FALSE失败
      */
-    BOOL open_key(HKEY v_hRootKey, const char_t* v_pszSubKeyPath = NULL, REGSAM v_samDesired = KEY_READ | KEY_WRITE);
+    BOOL open_key(HKEY v_hRootKey, const _tchar* v_pszSubKeyPath = NULL, REGSAM v_samDesired = KEY_READ | KEY_WRITE);
 
     /**
      * @brief 删除注册表节点
@@ -82,28 +82,28 @@ public:
      * @param [in] v_pszSubKeyPath 子节点路径
      * @return BOOL TRUE成功，FALSE失败
      */
-    static BOOL delete_key(HKEY v_hRootKey, const char_t* v_pszSubKeyPath);
+    static BOOL delete_key(HKEY v_hRootKey, const _tchar* v_pszSubKeyPath);
 
     /**
      * @brief 删除当前打开/创建的注册表节点的指定值
      * @param [in] v_pszValueName 值名称
      * @return BOOL TRUE成功，FALSE失败
      */
-    BOOL delete_value(const char_t* v_pszValueName);
+    BOOL delete_value(const _tchar* v_pszValueName);
 
     /**
      * @brief 枚举当前打开/创建的注册表节点的所有子节点名称
      * @param [out] v_keyList 子节点名称列表
      * @return BOOL TRUE成功，FALSE失败
      */
-    BOOL enum_keys(std::vector<string_t>& v_keyList);
+    BOOL enum_keys(std::vector<_tstring>& v_keyList);
 
     /**
      * @brief 枚举当前打开/创建的注册表节点的所有值名称
      * @param [out] v_valueList 值名称列表
      * @return BOOL TRUE成功，FALSE失败
      */
-    BOOL enum_values(std::vector<string_t>& v_valueList);
+    BOOL enum_values(std::vector<_tstring>& v_valueList);
 
     /**
      * @brief 设置当前打开/注册的注册表节点的值名称对应的DWORD值
@@ -111,7 +111,7 @@ public:
      * @param [in] v_dwValue 值
      * @return BOOL TRUE成功，FALSE失败
      */
-    BOOL set_dword(const char_t* v_pszValueName, DWORD v_dwValue);
+    BOOL set_dword(const _tchar* v_pszValueName, DWORD v_dwValue);
 
     /**
      * @brief 获取当前打开/注册的注册表节点的值名称对应的DWORD值
@@ -119,7 +119,7 @@ public:
      * @param [out] v_dwValue 值
      * @return BOOL TRUE成功，FALSE失败
      */
-    BOOL get_dword(const char_t* v_pszValueName, DWORD& v_dwValue);
+    BOOL get_dword(const _tchar* v_pszValueName, DWORD& v_dwValue);
 
     /**
      * @brief 设置当前打开/注册的注册表节点的值名称对应的QWORD值
@@ -127,7 +127,7 @@ public:
      * @param [in] v_ullValue 值
      * @return BOOL TRUE成功，FALSE失败
      */
-    BOOL set_qword(const char_t* v_pszValueName, ULONGLONG v_ullValue);
+    BOOL set_qword(const _tchar* v_pszValueName, ULONGLONG v_ullValue);
 
     /**
      * @brief 获取当前打开/注册的注册表节点的值名称对应的QWORD值
@@ -135,7 +135,7 @@ public:
      * @param [out] v_ullValue 值
      * @return BOOL TRUE成功，FALSE失败
      */
-    BOOL get_qword(const char_t* v_pszValueName, ULONGLONG& v_ullValue);
+    BOOL get_qword(const _tchar* v_pszValueName, ULONGLONG& v_ullValue);
 
     /**
      * @brief 设置当前打开/注册的注册表节点的值名称对应的字符串值
@@ -143,7 +143,7 @@ public:
      * @param [in] v_strValue 值
      * @return BOOL TRUE成功，FALSE失败
      */
-    BOOL set_string(const char_t* v_pszValueName, const string_t& v_strValue);
+    BOOL set_string(const _tchar* v_pszValueName, const _tstring& v_strValue);
 
     /**
      * @brief 获取当前打开/注册的注册表节点的值名称对应的字符串值
@@ -151,7 +151,7 @@ public:
      * @param [out] v_strValue 值
      * @return BOOL TRUE成功，FALSE失败
      */
-    BOOL get_string(const char_t* v_pszValueName, string_t& v_strValue);
+    BOOL get_string(const _tchar* v_pszValueName, _tstring& v_strValue);
 
     /**
      * @brief 设置当前打开/注册的注册表节点的值名称对应的二进制值
@@ -160,7 +160,7 @@ public:
      * @param [in] v_dwDataSize 值大小
      * @return BOOL TRUE成功，FALSE失败
      */
-    BOOL set_binary(const char_t* v_pszValueName, const void* v_pData, DWORD v_dwDataSize);
+    BOOL set_binary(const _tchar* v_pszValueName, const void* v_pData, DWORD v_dwDataSize);
 
     /**
      * @brief 获取当前打开/注册的注册表节点的值名称对应的二进制值
@@ -169,7 +169,7 @@ public:
      * @param [in] v_dwDataSize 值大小
      * @return BOOL TRUE成功，FALSE失败
      */
-    BOOL get_binary(const char_t* v_pszValueName, void* v_pData, DWORD v_dwDataSize);
+    BOOL get_binary(const _tchar* v_pszValueName, void* v_pData, DWORD v_dwDataSize);
 
     /**
      * @brief 获取当前打开/注册的注册表节点的值名称对应的大小
@@ -177,7 +177,7 @@ public:
      * @param [out] v_dwDataSize 值大小
      * @return BOOL TRUE成功，FALSE失败
      */
-    BOOL get_value_size(const char_t* v_pszValueName, DWORD& v_dwDataSize);
+    BOOL get_value_size(const _tchar* v_pszValueName, DWORD& v_dwDataSize);
 
 private:
     /**
@@ -201,7 +201,7 @@ private:
 
 private:
     HKEY m_hCurKey;              // 当前打开的注册表节点
-    string_t m_strCurKeyPath;    // 当前打开的注册表节点路径
+    _tstring m_strCurKeyPath;    // 当前打开的注册表节点路径
     static LSTATUS m_lLastError; // 最后一次操作的错误代码
 };
 

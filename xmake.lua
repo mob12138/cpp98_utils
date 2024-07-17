@@ -1,9 +1,7 @@
 add_rules("mode.debug", "mode.release")
 
--- add_defines("BOOST_CLANG")
 add_defines("UNICODE","_UNICODE")
 
-add_includedirs("third")
 -- set_languages("c++98")
 
 -- 链接sqlite库src/utils/db/sqlite3
@@ -12,13 +10,12 @@ add_links("sqlite3")
 
 target("example1")
     set_kind("binary")
-    add_headerfiles("src/*/*.h")
     add_files("example/1/*.cpp")
 
 
 target("example2")
     set_kind("binary")
-    add_includedirs("src/thread")
+    add_includedirs("src/utils/thread")
     add_files("src/**/*.cpp")
     add_files("example/2/*.cpp")
 

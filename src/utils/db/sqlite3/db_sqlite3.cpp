@@ -1,8 +1,7 @@
-#include "../../string_utils.h"
 #include <iostream>
-#include <boost/make_shared.hpp>
+#include "../../string/string_utils.h"
 #include "db_sqlite3.h"
-
+#include "sqlite3.h"
 #pragma comment(lib, "sqlite3.lib")
 
 bool db_sqlite3::m_bHasError = false;
@@ -10,14 +9,13 @@ std::string db_sqlite3::m_strLastError;
 
 struct statement_guard
 {
-    sqlite3_stmt* m_pStmt;
-    statement_guard(sqlite3_stmt* v_pStmt) : m_pStmt(v_pStmt) { db_sqlite3::reset_error(); }
+    sqlite3_stmt *m_pStmt;
+    statement_guard(sqlite3_stmt *v_pStmt) : m_pStmt(v_pStmt) { db_sqlite3::reset_error(); }
     ~statement_guard()
     {
         if (m_pStmt)
         {
             int nStatus = sqlite3_finalize(m_pStmt);
-            m_pStmt = NULL;
             if (nStatus)
             {
                 db_sqlite3::set_last_error(std::string("Failed to finalize statement: ") +
@@ -27,7 +25,11 @@ struct statement_guard
     }
 };
 
-bool db_sqlite3::connect(const std::string& v_strDBName)
+db_sqlite3::db_sqlite3() : m_pDb(NULL) {}
+
+db_sqlite3::~db_sqlite3() { disconnect(); }
+
+bool db_sqlite3::connect(const std::string &v_strDBName)
 {
     reset_error();
     int nRet = sqlite3_open(v_strDBName.c_str(), &m_pDb);
@@ -38,7 +40,8 @@ bool db_sqlite3::connect(const std::string& v_strDBName)
     }
     return true;
 }
-bool db_sqlite3::connect(const std::wstring& v_wstrDBName)
+
+bool db_sqlite3::connect(const std::wstring &v_wstrDBName)
 {
     reset_error();
     int nRet = sqlite3_open16(v_wstrDBName.c_str(), &m_pDb);
@@ -49,6 +52,7 @@ bool db_sqlite3::connect(const std::wstring& v_wstrDBName)
     }
     return true;
 }
+
 bool db_sqlite3::disconnect()
 {
     bool bRet = true;
@@ -64,10 +68,13 @@ bool db_sqlite3::disconnect()
     }
     return bRet;
 }
-bool db_sqlite3::execute(const std::string& v_strSql)
+
+bool db_sqlite3::connected() const { return m_pDb; }
+
+bool db_sqlite3::execute(const std::string &v_strSql)
 {
     reset_error();
-    sqlite3_stmt* pStmt = prepare(v_strSql);
+    sqlite3_stmt *pStmt = prepare(v_strSql);
     if (step(pStmt))
     {
         return true;
@@ -75,17 +82,22 @@ bool db_sqlite3::execute(const std::string& v_strSql)
 
     return false;
 }
-bool db_sqlite3::execute(const char* v_pszSql, ...)
+
+bool db_sqlite3::execute(const char *v_pszSql, ...)
 {
-    if (!v_pszSql) { return false; }
+    if (!v_pszSql)
+    {
+        return false;
+    }
     std::string strSql;
     FORMAT_IMPL(strSql, v_pszSql);
     return execute(strSql);
 }
-bool db_sqlite3::execute(const std::wstring& v_wstrSql)
+
+bool db_sqlite3::execute(const std::wstring &v_wstrSql)
 {
     reset_error();
-    sqlite3_stmt* pStmt = prepare(v_wstrSql);
+    sqlite3_stmt *pStmt = prepare(v_wstrSql);
     if (step(pStmt))
     {
         return true;
@@ -93,58 +105,86 @@ bool db_sqlite3::execute(const std::wstring& v_wstrSql)
 
     return false;
 }
-bool db_sqlite3::execute(const wchar_t* v_pwszSql, ...)
+
+bool db_sqlite3::execute(const wchar_t *v_pwszSql, ...)
 {
-    if (!v_pwszSql) { return false; }
+    if (!v_pwszSql)
+    {
+        return false;
+    }
     std::wstring wstrSql;
     FORMAT_IMPL(wstrSql, v_pwszSql);
     return execute(wstrSql);
 }
-bool db_sqlite3::execute(const db_sqlite3_stmt_binder& v_binder)
+
+bool db_sqlite3::execute(const db_sqlite3_stmt_binder &v_binder)
 {
     reset_error();
     return step(v_binder.m_pStmt);
 }
-db_sqlite3::result_ptr db_sqlite3::query(const std::string& v_strSql)
+
+db_sqlite3_query db_sqlite3::query(const std::string &v_strSql)
 {
     reset_error();
-    sqlite3_stmt* pStmt = prepare(v_strSql);
-    if (!pStmt) { return db_sqlite3::result_ptr(); }
-    return boost::make_shared<db_sqlite3_query_result>(m_pDb, pStmt);
+    sqlite3_stmt *pStmt = prepare(v_strSql);
+    if (!pStmt)
+    {
+        return db_sqlite3_query();
+    }
+    return db_sqlite3_query(m_pDb, pStmt);
 }
-db_sqlite3::result_ptr db_sqlite3::query(const char* v_pszSql, ...)
+
+db_sqlite3_query db_sqlite3::query(const char *v_pszSql, ...)
 {
-    if (!v_pszSql) { return db_sqlite3::result_ptr(); }
+    if (!v_pszSql)
+    {
+        return db_sqlite3_query();
+    }
     std::string strSql;
     FORMAT_IMPL(strSql, v_pszSql);
     return query(strSql);
 }
-db_sqlite3::result_ptr db_sqlite3::query(const std::wstring& v_wstrSql)
+
+db_sqlite3_query db_sqlite3::query(const std::wstring &v_wstrSql)
 {
     reset_error();
-    sqlite3_stmt* pStmt = prepare(v_wstrSql);
-    if (!pStmt) { return db_sqlite3::result_ptr(); }
-    return boost::make_shared<db_sqlite3_query_result>(m_pDb, pStmt);
+    sqlite3_stmt *pStmt = prepare(v_wstrSql);
+    if (!pStmt)
+    {
+        return db_sqlite3_query();
+    }
+    return db_sqlite3_query(m_pDb, pStmt);
 }
-db_sqlite3::result_ptr db_sqlite3::query(const wchar_t* v_pwszSql, ...)
+
+db_sqlite3_query db_sqlite3::query(const wchar_t *v_pwszSql, ...)
 {
-    if (!v_pwszSql) { return db_sqlite3::result_ptr(); }
+    if (!v_pwszSql)
+    {
+        return db_sqlite3_query(NULL, NULL);
+    }
     std::wstring wstrSql;
     FORMAT_IMPL(wstrSql, v_pwszSql);
     return query(wstrSql);
 }
-db_sqlite3::result_ptr db_sqlite3::query(const db_sqlite3_stmt_binder& v_binder)
+
+db_sqlite3_query db_sqlite3::query(const db_sqlite3_stmt_binder &v_binder)
 {
-    if (!v_binder.m_pStmt) { return db_sqlite3::result_ptr(); }
+    if (!v_binder.m_pStmt)
+    {
+        return db_sqlite3_query();
+    }
     reset_error();
-    return boost::make_shared<db_sqlite3_query_result>(m_pDb, v_binder.m_pStmt);
+    return db_sqlite3_query(m_pDb, v_binder.m_pStmt);
 }
 
-sqlite3_stmt* db_sqlite3::prepare(const std::string& v_strSql)
+sqlite3_stmt *db_sqlite3::prepare(const std::string &v_strSql)
 {
-    if (v_strSql.empty()) { return NULL; }
+    if (v_strSql.empty())
+    {
+        return NULL;
+    }
 
-    sqlite3_stmt* pStmt;
+    sqlite3_stmt *pStmt;
     int nRet = sqlite3_prepare_v2(m_pDb, &v_strSql[0], (int)v_strSql.size(), &pStmt, NULL);
     if (SQLITE_OK != nRet)
     {
@@ -153,11 +193,14 @@ sqlite3_stmt* db_sqlite3::prepare(const std::string& v_strSql)
     }
     return pStmt;
 }
-sqlite3_stmt* db_sqlite3::prepare(const std::wstring& v_wstrSql)
+sqlite3_stmt *db_sqlite3::prepare(const std::wstring &v_wstrSql)
 {
-    if (v_wstrSql.empty()) { return NULL; }
+    if (v_wstrSql.empty())
+    {
+        return NULL;
+    }
 
-    sqlite3_stmt* pStmt;
+    sqlite3_stmt *pStmt;
     int nRet = sqlite3_prepare16_v2(m_pDb, &v_wstrSql[0], (int)v_wstrSql.size() * sizeof(wchar_t), &pStmt, NULL);
     if (SQLITE_OK != nRet)
     {
@@ -166,9 +209,12 @@ sqlite3_stmt* db_sqlite3::prepare(const std::wstring& v_wstrSql)
     }
     return pStmt;
 }
-bool db_sqlite3::step(sqlite3_stmt* v_pStmt)
+bool db_sqlite3::step(sqlite3_stmt *v_pStmt)
 {
-    if (!v_pStmt) { return false; }
+    if (!v_pStmt)
+    {
+        return false;
+    }
 
     statement_guard guard(v_pStmt);
     int nRet = sqlite3_step(v_pStmt);
@@ -190,6 +236,7 @@ bool db_sqlite3::begin()
     }
     return true;
 }
+
 bool db_sqlite3::commit()
 {
     reset_error();
@@ -200,6 +247,7 @@ bool db_sqlite3::commit()
     }
     return true;
 }
+
 bool db_sqlite3::rollback()
 {
     reset_error();
@@ -212,64 +260,78 @@ bool db_sqlite3::rollback()
 }
 
 std::string db_sqlite3::get_last_error() { return m_strLastError; }
-std::wstring db_sqlite3::get_last_error_w()
-{
-    return string_utils::a_to_w(m_strLastError.c_str());
-}
-void db_sqlite3::set_last_error(const std::string& v_strError)
+
+std::wstring db_sqlite3::get_last_error_w() { return string_utils::a_to_w(m_strLastError.c_str()); }
+
+void db_sqlite3::set_last_error(const std::string &v_strError)
 {
     m_bHasError = true;
     m_strLastError = v_strError;
     std::cout << m_strLastError << std::endl;
 }
+
 void db_sqlite3::reset_error()
 {
     m_bHasError = false;
     m_strLastError.clear();
 }
 
-db_sqlite3_query_result::db_sqlite3_query_result(sqlite3* v_pDb, sqlite3_stmt* v_pStmt)
-    : m_pDb(v_pDb), m_pStmt(v_pStmt)
-{}
-bool db_sqlite3_query_result::next() const
+db_sqlite3_query::db_sqlite3_query(sqlite3 *v_pDb, sqlite3_stmt *v_pStmt)
+    : m_pDb(v_pDb), m_pStmt(v_pStmt), m_bRelease(false)
 {
+}
+
+db_sqlite3_query::~db_sqlite3_query()
+{
+    if (!m_bRelease)
+    {
+        statement_guard guard(m_pStmt);
+    }
+}
+
+bool db_sqlite3_query::next()
+{
+    if (!is_valid())
+    {
+        return false;
+    }
+
     db_sqlite3::reset_error();
     int nRet = sqlite3_step(m_pStmt);
     switch (nRet)
     {
-    case SQLITE_ROW: { return true; }
+    case SQLITE_ROW: {
+        return true;
+    }
     case SQLITE_DONE:
-    {
+    default: {
         statement_guard guard(m_pStmt);
+        m_bRelease = true;
+        if (SQLITE_DONE != nRet)
+        {
+            db_sqlite3::set_last_error(sqlite3_errmsg(m_pDb));
+        }
         return false;
     }
-    default:
+    }
+}
+int db_sqlite3_query::get_column_count() const { return sqlite3_column_count(m_pStmt); }
+
+int db_sqlite3_query::get_column_type(int v_nCol) const { return sqlite3_column_type(m_pStmt, v_nCol); }
+
+const char *db_sqlite3_query::get_column_name(int v_nCol) const { return sqlite3_column_name(m_pStmt, v_nCol); }
+
+const wchar_t *db_sqlite3_query::get_column_name_w(int v_nCol) const
+{
+    return (const wchar_t *)sqlite3_column_name16(m_pStmt, v_nCol);
+}
+
+int db_sqlite3_query::get_column_index(const std::string &v_strColumnName) const
+{
+    if (v_strColumnName.empty())
     {
-        statement_guard guard(m_pStmt);
-        db_sqlite3::set_last_error(sqlite3_errmsg(m_pDb));
-        return false;
+        return -1;
     }
-    }
-}
-int db_sqlite3_query_result::get_column_count() const
-{
-    return sqlite3_column_count(m_pStmt);
-}
-int db_sqlite3_query_result::get_column_type(int v_nCol) const
-{
-    return sqlite3_column_type(m_pStmt, v_nCol);
-}
-const char* db_sqlite3_query_result::get_column_name(int v_nCol) const
-{
-    return sqlite3_column_name(m_pStmt, v_nCol);
-}
-const wchar_t* db_sqlite3_query_result::get_column_name_w(int v_nCol) const
-{
-    return (const wchar_t*)sqlite3_column_name16(m_pStmt, v_nCol);
-}
-int db_sqlite3_query_result::get_column_index(const std::string& v_strColumnName) const
-{
-    if (v_strColumnName.empty()) { return -1; }
     for (int i = 0; i < get_column_count(); ++i)
     {
         if (v_strColumnName == get_column_name(i))
@@ -279,9 +341,13 @@ int db_sqlite3_query_result::get_column_index(const std::string& v_strColumnName
     }
     return -1;
 }
-int db_sqlite3_query_result::get_column_index(const std::wstring& v_wstrColumnName) const
+
+int db_sqlite3_query::get_column_index(const std::wstring &v_wstrColumnName) const
 {
-    if (v_wstrColumnName.empty()) { return -1; }
+    if (v_wstrColumnName.empty())
+    {
+        return -1;
+    }
     for (int i = 0; i < get_column_count(); ++i)
     {
         if (v_wstrColumnName == get_column_name_w(i))
@@ -291,59 +357,78 @@ int db_sqlite3_query_result::get_column_index(const std::wstring& v_wstrColumnNa
     }
     return -1;
 }
-const char* db_sqlite3_query_result::get_string(int v_nCol) const
+
+const char *db_sqlite3_query::get_text(int v_nCol) const { return (const char *)sqlite3_column_text(m_pStmt, v_nCol); }
+
+const wchar_t *db_sqlite3_query::get_textw(int v_nCol) const
 {
-    return (const char*)sqlite3_column_text(m_pStmt, v_nCol);
-}
-const wchar_t* db_sqlite3_query_result::get_wstring(int v_nCol) const
-{
-    return (const wchar_t*)sqlite3_column_text16(m_pStmt, v_nCol);
-}
-int db_sqlite3_query_result::get_int(int v_nCol) const
-{
-    return sqlite3_column_int(m_pStmt, v_nCol);
-}
-INT64 db_sqlite3_query_result::get_int64(int v_nCol) const
-{
-    return sqlite3_column_int64(m_pStmt, v_nCol);
-}
-double db_sqlite3_query_result::get_double(int v_nCol) const
-{
-    return sqlite3_column_double(m_pStmt, v_nCol);
-}
-const void* db_sqlite3_query_result::get_blob(int v_nCol) const
-{
-    return sqlite3_column_blob(m_pStmt, v_nCol);
+    return (const wchar_t *)sqlite3_column_text16(m_pStmt, v_nCol);
 }
 
-bool db_sqlite3_stmt_binder::prepare(const std::string& v_strSql)
+void db_sqlite3_query::get_string(int v_nCol, std::string &v_strVal) const
 {
-    if (!m_pDb || m_pStmt || v_strSql.empty()) { return false; }
+    v_strVal = (const char *)sqlite3_column_text(m_pStmt, v_nCol);
+}
+
+void db_sqlite3_query::get_string(int v_nCol, std::wstring &v_wstrVal) const
+{
+    v_wstrVal = (const wchar_t *)sqlite3_column_text16(m_pStmt, v_nCol);
+}
+
+int db_sqlite3_query::get_int(int v_nCol) const { return sqlite3_column_int(m_pStmt, v_nCol); }
+
+INT64 db_sqlite3_query::get_int64(int v_nCol) const { return sqlite3_column_int64(m_pStmt, v_nCol); }
+
+double db_sqlite3_query::get_double(int v_nCol) const { return sqlite3_column_double(m_pStmt, v_nCol); }
+
+const void *db_sqlite3_query::get_blob(int v_nCol) const { return sqlite3_column_blob(m_pStmt, v_nCol); }
+
+bool db_sqlite3_query::is_valid() const { return m_pDb && m_pStmt; }
+
+bool db_sqlite3_stmt_binder::prepare(const std::string &v_strSql)
+{
+    if (!m_pDb || m_pStmt || v_strSql.empty())
+    {
+        return false;
+    }
 
     m_pStmt = m_pDb->prepare(v_strSql);
     return m_pStmt ? true : false;
 }
-bool db_sqlite3_stmt_binder::prepare(const char* v_pszSql, ...)
+
+bool db_sqlite3_stmt_binder::prepare(const char *v_pszSql, ...)
 {
-    if (!v_pszSql) { return false; }
+    if (!v_pszSql)
+    {
+        return false;
+    }
     std::string strSql;
     FORMAT_IMPL(strSql, v_pszSql);
     return prepare(strSql);
 }
-bool db_sqlite3_stmt_binder::prepare(const std::wstring& v_wstrSql)
+
+bool db_sqlite3_stmt_binder::prepare(const std::wstring &v_wstrSql)
 {
-    if (!m_pDb || m_pStmt || v_wstrSql.empty()) { return false; }
+    if (!m_pDb || m_pStmt || v_wstrSql.empty())
+    {
+        return false;
+    }
 
     m_pStmt = m_pDb->prepare(v_wstrSql);
     return m_pStmt ? true : false;
 }
-bool db_sqlite3_stmt_binder::prepare(const wchar_t* v_pwszSql, ...)
+
+bool db_sqlite3_stmt_binder::prepare(const wchar_t *v_pwszSql, ...)
 {
-    if (!v_pwszSql) { return false; }
+    if (!v_pwszSql)
+    {
+        return false;
+    }
     std::wstring wstrSql;
     FORMAT_IMPL(wstrSql, v_pwszSql);
     return prepare(wstrSql);
 }
+
 bool db_sqlite3_stmt_binder::reset()
 {
     if (m_pStmt)
@@ -351,31 +436,59 @@ bool db_sqlite3_stmt_binder::reset()
         int nStatus = sqlite3_reset(m_pStmt);
         if (nStatus)
         {
-            db_sqlite3::set_last_error(std::string("Failed to reset statement: ") +
-                                       string_utils::to_string(nStatus));
+            db_sqlite3::set_last_error(std::string("Failed to reset statement: ") + string_utils::to_string(nStatus));
             return false;
         }
     }
     return true;
 }
 
-int db_sqlite3_stmt_binder::bind(int v_nCol, const void* v_pVal, int v_nLen, void(*v_xDel)(void*))
+bool db_sqlite3_stmt_binder::bind(int v_nCol, const void *v_pVal, int v_nLen, void (*v_xDel)(void *))
 {
-    return sqlite3_bind_blob(m_pStmt, v_nCol, v_pVal, v_nLen, v_xDel);
+    if (sqlite3_bind_blob(m_pStmt, v_nCol, v_pVal, v_nLen, v_xDel) != SQLITE_OK)
+    {
+        db_sqlite3::set_last_error(sqlite3_errmsg(m_pDb->m_pDb));
+        return false;
+    }
+    return true;
 }
-int db_sqlite3_stmt_binder::bind(int v_nCol, int v_val)
+
+bool db_sqlite3_stmt_binder::bind(int v_nCol, int v_iVal)
 {
-    return sqlite3_bind_int(m_pStmt, v_nCol, v_val);
+    if (sqlite3_bind_int64(m_pStmt, v_nCol, v_iVal) != SQLITE_OK)
+    {
+        db_sqlite3::set_last_error(sqlite3_errmsg(m_pDb->m_pDb));
+        return false;
+    }
+    return true;
 }
-int db_sqlite3_stmt_binder::bind(int v_nCol, double v_val)
+
+bool db_sqlite3_stmt_binder::bind(int v_nCol, double v_dVal)
 {
-    return sqlite3_bind_double(m_pStmt, v_nCol, v_val);
+    if (sqlite3_bind_double(m_pStmt, v_nCol, v_dVal) != SQLITE_OK)
+    {
+        db_sqlite3::set_last_error(sqlite3_errmsg(m_pDb->m_pDb));
+        return false;
+    }
+    return true;
 }
-int db_sqlite3_stmt_binder::bind(int v_nCol, const std::string& v_val)
+
+bool db_sqlite3_stmt_binder::bind(int v_nCol, const std::string &v_strVal)
 {
-    return sqlite3_bind_text(m_pStmt, v_nCol, v_val.c_str(), -1, SQLITE_TRANSIENT);
+    if (sqlite3_bind_text(m_pStmt, v_nCol, v_strVal.c_str(), -1, SQLITE_TRANSIENT) != SQLITE_OK)
+    {
+        db_sqlite3::set_last_error(sqlite3_errmsg(m_pDb->m_pDb));
+        return false;
+    }
+    return true;
 }
-int db_sqlite3_stmt_binder::bind(int v_nCol, const std::wstring& v_val)
+
+bool db_sqlite3_stmt_binder::bind(int v_nCol, const std::wstring &v_wstrVal)
 {
-    return sqlite3_bind_text16(m_pStmt, v_nCol, v_val.c_str(), -1, SQLITE_TRANSIENT);
+    if (sqlite3_bind_text16(m_pStmt, v_nCol, v_wstrVal.c_str(), -1, SQLITE_TRANSIENT) != SQLITE_OK)
+    {
+        db_sqlite3::set_last_error(sqlite3_errmsg(m_pDb->m_pDb));
+        return false;
+    }
+    return true;
 }
